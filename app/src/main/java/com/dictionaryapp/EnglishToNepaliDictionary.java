@@ -6,8 +6,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,14 +20,9 @@ import java.util.Map;
 public class EnglishToNepaliDictionary extends AppCompatActivity {
 
     private ListView lstDictionary;
+    private Button btnChange;
     private Map<String, String> dictionary;
-    public static final String words[] = {
-            "timro naam k ho", "What is your name",
-            "mero ghar gorkha ho", "My home is Gorkha",
-            "ma kta ho", "I am a boy",
-            "mero aauta sathi xa", "I have a friend",
-            "mero naam rojin ho", "my name is Rojin"
-    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,15 +30,24 @@ public class EnglishToNepaliDictionary extends AppCompatActivity {
         setContentView(R.layout.activity_english_to_nepali_dictionary);
 
         lstDictionary = findViewById(R.id.lstDictionary);
+        btnChange = findViewById(R.id.btnChange);
         dictionary = new HashMap<>();
-        for (int i = 0; i < words.length; i += 2) {
-            dictionary.put(words[i], words[i + 1]);
-        }
-        ArrayAdapter english = new ArrayAdapter<>(this,
+
+        readFromFile();
+        ArrayAdapter adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1,
                 new ArrayList<String>(dictionary.keySet())
         );
-        lstDictionary.setAdapter(english);
+        lstDictionary.setAdapter(adapter);
+
+        btnChange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(EnglishToNepaliDictionary.this, AddWord.class);
+
+                startActivity(intent);
+            }
+        });
 
         lstDictionary.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -47,12 +56,27 @@ public class EnglishToNepaliDictionary extends AppCompatActivity {
                 String meaning = dictionary.get(key);
 
                 Intent intent = new Intent(EnglishToNepaliDictionary.this, SecondActivity.class);
-
                 intent.putExtra("meaning", meaning);
                 startActivity(intent);
             }
         });
 
 
+    }
+
+    private void readFromFile() {
+        try{
+            FileInputStream fis = openFileInput("words.txt");
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader br = new BufferedReader(isr);
+            String line = "";
+            while ((line = br.readLine()) !=null){
+                String[] parts = line.split("->");
+                dictionary.put(parts[0], parts[1]);
+            }
+        }
+        catch (IOException e ){
+            e.printStackTrace();
+        }
     }
 }
